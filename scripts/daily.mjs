@@ -33,11 +33,14 @@ try {
   term = (await page.locator('#term').innerText()).replace(/\s+/g,'').trim();
   if (!term) throw new Error('Missing title');
   const shownDay = await page.locator('#day-date').innerText();
-  await page.addStyleTag({content: '.tabbar { visibility: hidden !important; }'});
+  await page.addStyleTag({content: `
+    .tabbar { visibility: hidden !important; }
+    #card > section:has(#lens), #card > section:has(#flex) { display: none !important; }
+  `});
   await page.locator('#card').screenshot({path:`${folder}/column.png`});
-  await fs.writeFile(`${folder}/post.json`,JSON.stringify({date:day,shownDay,term,text:`きょうの衒学　${term}`},null,2)+'\n');
+  await fs.writeFile(`${folder}/post.json`,JSON.stringify({date:day,shownDay,term,text:`きょうの衒学　「${term}」`},null,2)+'\n');
 } finally { await browser.close(); }
-const text = `きょうの衒学　${term}`;
+const text = `きょうの衒学　「${term}」`;
 console.log(text,`${folder}/column.png`);
 if (!live) process.exit(0);
 // Publish the image first. Raw URLs address the immutable commit, avoiding cached old images.
