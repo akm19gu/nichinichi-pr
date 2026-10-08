@@ -2,6 +2,8 @@ import {chromium} from 'playwright';
 import fs from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {graphql} from './buffer.mjs';
+// Verified Buffer channel for the 日々是衒学 publicity account.
+process.env.BUFFER_CHANNEL_ID ||= '6ac76f366a5c39ccb64f330c';
 const live = process.argv.includes('--publish');
 const day = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date());
 const root = live ? 'posts' : 'preview';
