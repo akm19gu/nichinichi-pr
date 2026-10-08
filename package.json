@@ -1,0 +1,1 @@
+{"name":"hibi-pr","private":true,"type":"module","scripts":{"preview":"node scripts/daily.mjs","channels":"node scripts/channels.mjs"},"dependencies":{"playwright":"1.62.1"}}

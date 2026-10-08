@@ -1,0 +1,58 @@
+name: Daily column
+on:
+  push:
+    paths:
+      - scripts/**
+      - package*.json
+      - .github/workflows/daily.yml
+  schedule:
+    - cron: '50 22 * * *' # 07:50 JST; delivery ~5 minutes after execution
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: '画像確認後、Xへの実投稿を有効にする'
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: daily-column
+  cancel-in-progress: false
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: |
+          git config user.name 'hibi-pr-bot'
+          git config user.email 'hibi-pr-bot@users.noreply.github.com'
+      - name: Preview or publish
+        env:
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID: ${{ vars.BUFFER_CHANNEL_ID }}
+          PUBLISH: ${{ (github.event_name == 'schedule' && vars.AUTO_POST == 'true') || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
+        run: |
+          if [ "$PUBLISH" = 'true' ]; then
+            node scripts/daily.mjs --publish
+          else
+            node scripts/daily.mjs
+          fi
+      - name: Preview summary
+        if: always()
+        run: |
+          echo '画像と投稿文は生成結果を確認。失敗時はActionsログとBufferのキューを確認。' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: column-preview
+          path: preview/
+          retention-days: 3
+          if-no-files-found: ignore
